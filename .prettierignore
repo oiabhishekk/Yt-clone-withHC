@@ -1,0 +1,18 @@
+# Ignore node_modules directory
+/.vscode
+node_modules/
+
+# Ignore build output
+build/
+dist/
+
+# Ignore coverage reports
+coverage/
+
+# Ignore environment-specific files
+.env
+.env.local
+.env.*.local
+
+# Ignore log files
+*.log
