@@ -4,5 +4,4 @@ export const globalErrorHandler=(error,req,res,next)=>{
     status:error.statusCode,
     message:error.message 
   })
-  next()
 }
