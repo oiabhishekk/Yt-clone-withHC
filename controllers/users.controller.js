@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
 import { emailRegex, passwordRegex } from "../src/constants.js";
 import ApiError from "../utils/ApiError.js";
@@ -143,3 +144,93 @@ export const logoutUser = asyncHandler(async (req, res) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logged Out"));
 });
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+  const comingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+  if (!comingRefreshToken) throw new ApiError(400, "Refresh token expired");
+  try {
+    const decodedUser = jwt.verify(
+      comingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+    const { refreshToken, accessToken } = await generateAccessAndRefreshToken(
+      decodedUser._id
+    );
+
+    let options = {
+      httpOnly: true,
+      secure: true,
+    };
+    res
+      .status(200)
+      .cookie("refreshToken", refreshToken, options)
+      .cookie("accessToken", accessToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken },
+          "Access token refreshed"
+        )
+      );
+  } catch (error) {
+    throw new ApiError(
+      400,
+      error || "Error occured while generating refresh token"
+    );
+  }
+});
+export const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { password, newPassword } = req.body;
+  if (!(password, newPassword))
+    throw new ApiError(400, "Provide password and new password");
+  const user =await User.findById(req.user._id); //using jwtverify middleware we'll get req.user
+  console.log(user);
+  const isPasswordCorrect = await user.isPasswordCorrect(password);
+  if (!isPasswordCorrect) throw new ApiError(400, "Wrong Password");
+  if (passwordRegex.test(newPassword) === false)
+    throw new ApiError(
+      400,
+      " Password must be 8+ characters, with at least 1 uppercase, 1 lowercase, 1 digit, and special characters allowed."
+    );
+  user.password = newPassword;
+  user.save({ validateBeforeSave: false });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+export const getCurrUser=asyncHandler(async(req,res)=>{
+  if(!req.user)throw new ApiError(400,"No user Found")
+  return res
+    .status(200)
+    .json(new ApiResponse(
+        200,
+        req.user,
+        "User fetched successfully"
+    ))
+})
+export const updateAccountDetails=asyncHandler(async(req,res)=>{
+  const {fullName, email} = req.body
+
+    if (!fullName || !email) {
+        throw new ApiError(400, "All fields are required")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullName,
+                email: email
+            }
+        },
+        {new: true}
+        
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Account details updated successfully"))  
+})
+export const updateAvatar=asyncHandler(async(req,res)=>{
+  
+})
