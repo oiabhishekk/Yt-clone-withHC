@@ -30,7 +30,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    avatar: {
+    coverImg: {
       type: String,
     },
     watchHistory: [
@@ -58,7 +58,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(password, this.password);
+  return await bcrypt.compare(password, this.password );
 };
 
 userSchema.methods.generateAccessToken = function () {
@@ -86,4 +86,4 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-export const User = model(User, userSchema);
+export const User = model("User", userSchema);

@@ -9,8 +9,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export const uploadoncloudinary = (localfile) => {
-  cloudinary.uploader.upload(
+export const uploadoncloudinary = async (localfile) => {
+  if (!localfile) return null;
+  let url;
+  await cloudinary.uploader.upload(
     localfile,
     { resource_type: "auto" },
     function (error, result) {
@@ -19,8 +21,9 @@ export const uploadoncloudinary = (localfile) => {
         fs.unlinkSync(localfile);
         return error;
       }
-      console.log(result);
-      return result;
+      console.log(result.url);
+      url = result.url;
     }
   );
+  return url;
 };
